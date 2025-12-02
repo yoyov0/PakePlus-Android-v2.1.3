@@ -2,12 +2,16 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <!-- 增强移动端兼容性的viewport设置 -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <!-- 针对Android设备的特殊meta标签 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#000000">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="HandheldFriendly" content="true">
+    <!-- 针对Android WebView的特殊配置 -->
+    <meta http-equiv="Content-Security-Policy" content="default-src * 'self' 'unsafe-inline' 'unsafe-eval' data: gap: content:">
     <link rel="apple-touch-icon" href="https://chatbotcos.weixin.qq.com/chatbot/30-openaiassets_0fcbc917653b4f5350f3290e2343fdaf_469401762766962387.jpg">
     <!-- 修改1: 标题改为"♡呦の音乐♡播放器" -->
     <title>♡呦の音乐♡播放器</title>
@@ -19,15 +23,28 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
     <!-- JSZip for efficient data export/import -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        :root { /* Night Mode */ --bg-primary: #121212; --bg-secondary: #191919; --bg-tertiary: #282828; --bg-app: rgba(40, 40, 40, 0.7); --text-primary: #ffffff; --text-secondary: #b3b3b3; --border-color: #444; --global-font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; --lyric-color: #ffffff; --global-font-size: 16px; }
+        :root { /* Night Mode */ --bg-primary: #121212; --bg-secondary: #191919; --bg-tertiary: #282828; --bg-app: rgba(40, 40, 40, 0.7); --text-primary: #ffffff; --text-secondary: #b3b3b3; --border-color: #444; --global-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; --lyric-color: #ffffff; --global-font-size: 16px; }
         body.light-mode { /* Day Mode */ --bg-primary: #f0f2f5; --bg-secondary: #ffffff; --bg-tertiary: #e9e9e9; --bg-app: rgba(255, 255, 255, 0.6); --text-primary: #000000; --text-secondary: #555555; --border-color: #dcdcdc; }
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: var(--global-font); color: var(--text-primary); background-color: var(--bg-primary); transition: background-color 0.3s, color 0.3s; font-size: var(--global-font-size); -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: var(--global-font); color: var(--text-primary); background-color: var(--bg-primary); transition: background-color 0.3s, color 0.3s; font-size: var(--global-font-size); -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
         .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; box-sizing: border-box; transition: opacity 0.4s ease, transform 0.4s ease; opacity: 0; transform: scale(1.05); pointer-events: none; background-color: var(--bg-primary); }
         .view.active { opacity: 1; transform: scale(1); pointer-events: auto; }
-        button, input[type="file"], select { cursor: pointer; -webkit-appearance: none; appearance: none; }
+        button, input[type="file"], select { cursor: pointer; -webkit-appearance: none; appearance: none; outline: none; }
         button:disabled { cursor: not-allowed; opacity: 0.7; }
         input[type="file"] { font-size: 14px; }
-        input[type="file"]::-webkit-file-upload-button { background: #1DB954; color: white; border: none; padding: 8px 12px; border-radius: 4px; }
+        /* 针对Android设备的文件上传按钮样式 */
+        input[type="file"]::-webkit-file-upload-button { 
+            background: #1DB954; 
+            color: white; 
+            border: none; 
+            padding: 10px 15px; 
+            border-radius: 6px; 
+            font-size: 14px;
+            font-weight: bold;
+        }
+        input[type="file"]:active::-webkit-file-upload-button {
+            background: #1aa34a;
+            transform: scale(0.98);
+        }
         #desktop-view { background-size: cover; background-position: center; display: flex; flex-direction: column; padding: 20px; }
         .desktop-header { text-align: center; text-shadow: 0 0 10px rgba(0,0,0,0.7); }
         .desktop-time { font-size: 72px; font-weight: 600; }
@@ -47,7 +64,8 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
         .app-content { padding: 20px; overflow-y: auto; flex-grow: 1; -webkit-overflow-scrolling: touch; }
         .form-group { margin-bottom: 20px; } .form-group label { display: block; margin-bottom: 8px; color: var(--text-secondary); } .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; background-color: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px; box-sizing: border-box; font-size: inherit; -webkit-appearance: none; appearance: none; }
         .form-group textarea { resize: vertical; min-height: 100px; }
-        .action-button { width: 100%; padding: 15px; background-color: #1DB954; color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 10px; font-size: var(--global-font-size); }
+        .action-button { width: 100%; padding: 15px; background-color: #1DB954; color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 10px; font-size: var(--global-font-size); transition: background-color 0.2s, transform 0.1s; }
+        .action-button:active { background-color: #1aa34a; transform: scale(0.98); }
         
         /* Playlist & Folder Styles */
         #playlist-container { list-style: none; padding: 0; margin: 0; display: none; }
@@ -139,10 +157,12 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
         .app-customize-row { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
         .app-customize-row .preview-icon { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; background-color: var(--bg-tertiary); flex-shrink: 0; }
         .app-customize-row .app-name-input { flex-grow: 1; padding: 10px; background-color: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px; }
-        .app-customize-row .select-file-btn { padding: 8px 12px; font-size: 13px; background-color: #03A9F4; color: white; border: none; border-radius: 4px; white-space: nowrap; }
+        .app-customize-row .select-file-btn { padding: 8px 12px; font-size: 13px; background-color: #03A9F4; color: white; border: none; border-radius: 4px; white-space: nowrap; transition: background-color 0.2s, transform 0.1s; }
+        .app-customize-row .select-file-btn:active { background-color: #039be5; transform: scale(0.98); }
         .input-with-button { display: flex; gap: 10px; }
         .input-with-button input { flex-grow: 1; }
-        .input-with-button button { padding: 10px 15px; background-color: #1DB954; color: white; border: none; border-radius: 4px; }
+        .input-with-button button { padding: 10px 15px; background-color: #1DB954; color: white; border: none; border-radius: 4px; transition: background-color 0.2s, transform 0.1s; }
+        .input-with-button button:active { background-color: #1aa34a; transform: scale(0.98); }
         .font-size-control { display: flex; align-items: center; gap: 15px; }
         .font-size-control input[type="range"] { flex-grow: 1; }
         .font-size-control span { font-weight: bold; min-width: 40px; text-align: right; }
@@ -153,7 +173,8 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
         .switch { position:relative;display:inline-block;width:60px;height:34px} .switch input{opacity:0;width:0;height:0} .slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:#ccc;transition:.4s;border-radius:34px} .slider:before{position:absolute;content:"";height:26px;width:26px;left:4px;bottom:4px;background-color:white;transition:.4s;border-radius:50%} input:checked+.slider{background-color:#2196F3} input:checked+.slider:before{transform:translateX(26px)}
         .source-switcher { display: flex; gap: 20px; margin-bottom: 10px; }
         .hidden-input { display: none; }
-        .import-vtt-btn { margin-bottom: 5px; font-size: 12px; background-color: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 5px 10px; border-radius: 4px; }
+        .import-vtt-btn { margin-bottom: 5px; font-size: 12px; background-color: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 5px 10px; border-radius: 4px; transition: background-color 0.2s, transform 0.1s; }
+        .import-vtt-btn:active { background-color: var(--border-color); transform: scale(0.98); }
 
         /* Full Page Lyrics Modal */
         #full-lyrics-modal {
@@ -209,27 +230,87 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
         /* 修改2: 新建选项样式 */
         .new-folder-option { color: inherit !important; font-weight: normal !important; }
         
-        /* 移动端文件上传修复按钮样式 */
-        .mobile-file-helper {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 60px;
-            height: 60px;
-            background: #1DB954;
-            color: white;
-            border-radius: 50%;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            z-index: 1000;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            cursor: pointer;
+        /* 荣耀手机文件上传特殊样式 */
+        .honor-file-input-container {
+            position: relative;
+            width: 100%;
+            margin-bottom: 10px;
         }
         
-        .mobile-file-helper.active {
-            display: flex;
+        .honor-file-input-button {
+            display: block;
+            width: 100%;
+            padding: 12px 15px;
+            background-color: #1DB954;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        
+        .honor-file-input-button:active {
+            background-color: #1aa34a;
+            transform: scale(0.98);
+        }
+        
+        .honor-file-input-real {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        /* 荣耀手机权限引导页面 */
+        #honor-permission-guide {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            color: white;
+        }
+        
+        #honor-permission-guide.active {
+            display: block;
+        }
+        
+        .permission-guide-content {
+            background: #333;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .permission-step {
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #444;
+            border-radius: 8px;
+        }
+        
+        .permission-step h3 {
+            margin-top: 0;
+            color: #1DB954;
+        }
+        
+        .permission-step img {
+            max-width: 100%;
+            border-radius: 5px;
+            margin-top: 10px;
         }
         
         /* 文件上传状态提示 */
@@ -240,19 +321,116 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
             transform: translateX(-50%);
             background: rgba(0,0,0,0.8);
             color: white;
-            padding: 10px 20px;
+            padding: 12px 20px;
             border-radius: 8px;
             z-index: 1001;
             display: none;
+            font-size: 14px;
+            max-width: 80%;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
         
         .file-upload-status.active {
             display: block;
+            animation: fadeInOut 3s ease-in-out;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            90% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+        }
+        
+        /* 大文件警告 */
+        .file-size-warning {
+            display: none;
+            background: #ff9800;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+        
+        .file-size-warning.active {
+            display: block;
+        }
+        
+        /* 权限测试按钮 */
+        .permission-test-btn {
+            background: #ff9800;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-top: 5px;
+            cursor: pointer;
+        }
+        
+        .permission-test-btn:active {
+            background: #f57c00;
         }
     </style>
 </head>
 <body>
-    <div id="desktop-view" class="view active"><div class="desktop-header"><div id="desktop-time">12:00</div><div id="desktop-date">1月1日</div></div><div class="desktop-top-right"><button id="announcement-btn">📢</button></div><div class="desktop-main"><div class="app-dock" id="app-dock"></div><div id="display-picture-container"></div></div></div>
+    <!-- 荣耀手机权限引导页面 -->
+    <div id="honor-permission-guide">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h1 style="color: #1DB954;">📁 荣耀手机文件上传权限设置指南</h1>
+            <p style="color: #ccc; margin-top: 10px;">请按照以下步骤开启文件访问权限</p>
+        </div>
+        
+        <div class="permission-guide-content">
+            <div class="permission-step">
+                <h3>步骤 1: 进入应用设置</h3>
+                <p>在手机桌面找到本应用图标，长按应用图标，选择「应用信息」或「应用详情」</p>
+            </div>
+            
+            <div class="permission-step">
+                <h3>步骤 2: 找到权限管理</h3>
+                <p>在应用信息页面中，找到并点击「权限」或「权限管理」选项</p>
+            </div>
+            
+            <div class="permission-step">
+                <h3>步骤 3: 开启文件权限</h3>
+                <p>在权限列表中，找到以下权限并设置为「允许」：</p>
+                <ul style="color: #ccc; padding-left: 20px;">
+                    <li><strong>存储权限</strong>（读取手机存储）</li>
+                    <li><strong>文件访问权限</strong></li>
+                    <li><strong>媒体访问权限</strong></li>
+                </ul>
+            </div>
+            
+            <div class="permission-step">
+                <h3>步骤 4: 重新启动应用</h3>
+                <p>设置完成后，请完全关闭应用并重新打开</p>
+            </div>
+            
+            <div style="margin-top: 30px; text-align: center;">
+                <button id="close-permission-guide" style="background: #1DB954; color: white; border: none; padding: 12px 30px; border-radius: 6px; font-size: 16px; cursor: pointer;">
+                    我已设置完成，开始使用
+                </button>
+                <p style="color: #999; margin-top: 15px; font-size: 12px;">如果仍有问题，请尝试在系统设置中允许「安装未知来源应用」</p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="desktop-view" class="view active">
+        <div class="desktop-header">
+            <div id="desktop-time">12:00</div>
+            <div id="desktop-date">1月1日</div>
+        </div>
+        <div class="desktop-top-right">
+            <button id="announcement-btn">📢</button>
+        </div>
+        <div class="desktop-main">
+            <div class="app-dock" id="app-dock"></div>
+            <div id="display-picture-container"></div>
+        </div>
+    </div>
     
     <!-- 添加歌曲界面 -->
     <div id="settings-view" class="view app-page">
@@ -277,10 +455,18 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
             
             <div class="form-group">
                 <label>封面图片 (可选)</label>
-                <div style="display:flex;align-items:center">
-                    <input type="file" id="image-file-input" accept="image/*" style="flex-grow:1" capture="environment">
+                <!-- 荣耀手机专用文件上传按钮 -->
+                <div class="honor-file-input-container">
+                    <button type="button" class="honor-file-input-button" id="honor-image-btn">
+                        📷 选择封面图片
+                    </button>
+                    <input type="file" class="honor-file-input-real" id="honor-image-file-input" accept="image/*">
+                </div>
+                <div style="display:flex;align-items:center; margin-top: 10px;">
+                    <input type="file" id="image-file-input" accept="image/*" style="flex-grow:1; display: none;">
                     <img id="add-image-preview" class="image-preview" style="display:none">
                 </div>
+                <div id="image-size-warning" class="file-size-warning"></div>
             </div>
             
             <div class="form-group">
@@ -291,11 +477,22 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                 </div>
                 <p style="font-size: 12px; color: var(--text-secondary); margin-top: 5px; margin-bottom: 10px;">如果机型不支持wav，可上传url</p>
                 <div id="audio-file-group">
-                    <input type="file" id="audio-file-input" accept=".mp3,.wav,.m4a,audio/*" capture>
+                    <!-- 荣耀手机专用文件上传按钮 -->
+                    <div class="honor-file-input-container">
+                        <button type="button" class="honor-file-input-button" id="honor-audio-btn">
+                            🎵 选择音频文件
+                        </button>
+                        <input type="file" class="honor-file-input-real" id="honor-audio-file-input" accept=".mp3,.wav,.m4a,audio/*">
+                    </div>
+                    <input type="file" id="audio-file-input" accept=".mp3,.wav,.m4a,audio/*" style="display: none;">
                 </div>
                 <div id="audio-url-group" class="hidden-input">
                     <input type="text" id="audio-url-input" placeholder="输入 .mp3 或 .wav 链接">
                 </div>
+                <div id="audio-size-warning" class="file-size-warning"></div>
+                <button type="button" class="permission-test-btn" id="test-audio-permission">
+                    测试音频文件选择
+                </button>
             </div>
             
             <div class="form-group">
@@ -307,12 +504,77 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
             </div>
             
             <button id="save-preset-btn" class="action-button">保存歌曲</button>
+            
+            <!-- 荣耀手机权限提示 -->
+            <div style="margin-top: 20px; padding: 15px; background: rgba(255, 152, 0, 0.1); border-radius: 8px; border-left: 4px solid #ff9800;">
+                <h4 style="margin-top: 0; color: #ff9800;">📱 荣耀手机用户请注意</h4>
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;">
+                    如果无法选择文件，请检查是否已授予应用「存储权限」。点击下方按钮查看设置教程：
+                </p>
+                <button type="button" id="show-permission-guide" style="background: #ff9800; color: white; border: none; padding: 8px 15px; border-radius: 4px; font-size: 13px; width: 100%;">
+                    查看权限设置教程
+                </button>
+            </div>
         </div>
     </div>
     
-    <div id="edit-song-view" class="view app-page"><div class="app-header"><button class="back-btn" data-target="playlist-view">‹</button><h1 id="edit-view-title">编辑歌曲</h1></div><div class="app-content"><form id="edit-song-form"><div class="form-group"><label>歌曲标题</label><input type="text" id="edit-song-title-input"></div><div class="form-group"><label>分类文件夹</label><select id="edit-song-folder-select"><option value="">未分类</option></select></div><div class="form-group"><div style="display:flex;justify-content:space-between;align-items:center;"><label>字幕/歌词</label><button type="button" class="import-vtt-btn" data-target="edit-lyric-input">📥 导入歌词文件</button></div><textarea id="edit-lyric-input" rows="5"></textarea></div><div class="form-group"><label>更换音频文件 (可选)</label><input type="file" id="edit-audio-file-input" accept=".mp3,.wav,.m4a,audio/*"></div><div class="form-group"><label>更换封面图片 (可选)</label><div style="display:flex;align-items:center"><input type="file" id="edit-image-file-input" accept="image/*" style="flex-grow:1"><img id="edit-image-preview" class="image-preview"></div></div>
-    <div class="form-group"><label>界面布局</label><button type="button" id="reset-positions-btn" style="background-color: #607D8B; color: white; border: none; padding: 12px; width: 100%; border-radius: 4px;">↺ 重置所有拖动位置</button></div>
-    <button id="update-song-btn" class="action-button" type="submit">保存更改</button></form></div></div>
+    <div id="edit-song-view" class="view app-page">
+        <div class="app-header">
+            <button class="back-btn" data-target="playlist-view">‹</button>
+            <h1 id="edit-view-title">编辑歌曲</h1>
+        </div>
+        <div class="app-content">
+            <form id="edit-song-form">
+                <div class="form-group">
+                    <label>歌曲标题</label>
+                    <input type="text" id="edit-song-title-input">
+                </div>
+                <div class="form-group">
+                    <label>分类文件夹</label>
+                    <select id="edit-song-folder-select">
+                        <option value="">未分类</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <label>字幕/歌词</label>
+                        <button type="button" class="import-vtt-btn" data-target="edit-lyric-input">📥 导入歌词文件</button>
+                    </div>
+                    <textarea id="edit-lyric-input" rows="5"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>更换音频文件 (可选)</label>
+                    <!-- 荣耀手机专用文件上传按钮 -->
+                    <div class="honor-file-input-container">
+                        <button type="button" class="honor-file-input-button" id="honor-edit-audio-btn">
+                            🎵 更换音频文件
+                        </button>
+                        <input type="file" class="honor-file-input-real" id="honor-edit-audio-file-input" accept=".mp3,.wav,.m4a,audio/*">
+                    </div>
+                    <input type="file" id="edit-audio-file-input" accept=".mp3,.wav,.m4a,audio/*" style="display: none;">
+                </div>
+                <div class="form-group">
+                    <label>更换封面图片 (可选)</label>
+                    <!-- 荣耀手机专用文件上传按钮 -->
+                    <div class="honor-file-input-container">
+                        <button type="button" class="honor-file-input-button" id="honor-edit-image-btn">
+                            📷 更换封面图片
+                        </button>
+                        <input type="file" class="honor-file-input-real" id="honor-edit-image-file-input" accept="image/*">
+                    </div>
+                    <div style="display:flex;align-items:center; margin-top: 10px;">
+                        <input type="file" id="edit-image-file-input" accept="image/*" style="flex-grow:1; display: none;">
+                        <img id="edit-image-preview" class="image-preview">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>界面布局</label>
+                    <button type="button" id="reset-positions-btn" style="background-color: #607D8B; color: white; border: none; padding: 12px; width: 100%; border-radius: 4px;">↺ 重置所有拖动位置</button>
+                </div>
+                <button id="update-song-btn" class="action-button" type="submit">保存更改</button>
+            </form>
+        </div>
+    </div>
     
     <!-- 播放列表 -->
     <div id="playlist-view" class="view app-page">
@@ -328,18 +590,100 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
         </div>
     </div>
 
-    <div id="beautify-view" class="view app-page"><div class="app-header"><button class="back-btn" data-target="desktop-view">‹</button><h1 id="beautify-view-title">美化</h1></div><div class="app-content"><div class="beautify-section"><h2>主题模式</h2><div style="display:flex;align-items:center;gap:10px;"><span>夜间</span><label class="switch"><input type="checkbox" id="theme-switch"><span class="slider"></span></label><span>日间</span></div></div><div class="beautify-section"><h2>应用定制</h2><div id="app-customize-container"></div></div><div class="beautify-section"><h2>播放器界面</h2><div class="form-group"><label>全局背景</label><input type="file" id="player-bg-input" accept="image/*"></div><div class="form-group"><label>封面尺寸 (px)</label><div class="input-with-button"><input type="number" id="cover-width-input" placeholder="宽度"><input type="number" id="cover-height-input" placeholder="高度"><button id="save-cover-size-btn">保存</button></div></div></div><div class="beautify-section"><h2>桌面与字体</h2><div class="form-group"><label>全局背景</label><input type="file" id="bg-file-input" accept="image/*"></div><div class="form-group"><label>展示区图片</label><input type="file" id="dp-file-input" accept="image/*"></div>
-            <div class="form-group">
-                <label>字体文件</label>
-                <div class="input-with-button">
-                    <input type="file" id="font-file-input" accept=".ttf,.otf,.woff,.woff2" style="display:none;">
-                    <input type="text" id="font-url-input" placeholder="选择字体文件或输入URL" readonly>
-                    <button id="select-font-btn">选择文件</button>
-                    <button id="save-font-btn">保存</button>
+    <div id="beautify-view" class="view app-page">
+        <div class="app-header">
+            <button class="back-btn" data-target="desktop-view">‹</button>
+            <h1 id="beautify-view-title">美化</h1>
+        </div>
+        <div class="app-content">
+            <div class="beautify-section">
+                <h2>主题模式</h2>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span>夜间</span>
+                    <label class="switch">
+                        <input type="checkbox" id="theme-switch">
+                        <span class="slider"></span>
+                    </label>
+                    <span>日间</span>
                 </div>
-                <p style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">支持TTF、OTF、WOFF、WOFF2格式</p>
             </div>
-            <div class="form-group"><label>全局字体大小</label><div class="font-size-control"><input type="range" id="font-size-slider" min="12" max="22" step="1"><span id="font-size-value">16px</span></div></div></div></div></div>
+            <div class="beautify-section">
+                <h2>应用定制</h2>
+                <div id="app-customize-container"></div>
+            </div>
+            <div class="beautify-section">
+                <h2>播放器界面</h2>
+                <div class="form-group">
+                    <label>全局背景</label>
+                    <!-- 荣耀手机专用文件上传按钮 -->
+                    <div class="honor-file-input-container">
+                        <button type="button" class="honor-file-input-button" id="honor-player-bg-btn">
+                            🖼️ 选择播放器背景
+                        </button>
+                        <input type="file" class="honor-file-input-real" id="honor-player-bg-input" accept="image/*">
+                    </div>
+                    <input type="file" id="player-bg-input" accept="image/*" style="display: none;">
+                </div>
+                <div class="form-group">
+                    <label>封面尺寸 (px)</label>
+                    <div class="input-with-button">
+                        <input type="number" id="cover-width-input" placeholder="宽度">
+                        <input type="number" id="cover-height-input" placeholder="高度">
+                        <button id="save-cover-size-btn">保存</button>
+                    </div>
+                </div>
+            </div>
+            <div class="beautify-section">
+                <h2>桌面与字体</h2>
+                <div class="form-group">
+                    <label>全局背景</label>
+                    <!-- 荣耀手机专用文件上传按钮 -->
+                    <div class="honor-file-input-container">
+                        <button type="button" class="honor-file-input-button" id="honor-bg-file-btn">
+                            🖼️ 选择桌面背景
+                        </button>
+                        <input type="file" class="honor-file-input-real" id="honor-bg-file-input" accept="image/*">
+                    </div>
+                    <input type="file" id="bg-file-input" accept="image/*" style="display: none;">
+                </div>
+                <div class="form-group">
+                    <label>展示区图片</label>
+                    <!-- 荣耀手机专用文件上传按钮 -->
+                    <div class="honor-file-input-container">
+                        <button type="button" class="honor-file-input-button" id="honor-dp-file-btn">
+                            🖼️ 选择展示区图片
+                        </button>
+                        <input type="file" class="honor-file-input-real" id="honor-dp-file-input" accept="image/*">
+                    </div>
+                    <input type="file" id="dp-file-input" accept="image/*" style="display: none;">
+                </div>
+                <div class="form-group">
+                    <label>字体文件</label>
+                    <div class="input-with-button">
+                        <!-- 荣耀手机专用文件上传按钮 -->
+                        <div class="honor-file-input-container" style="flex-grow: 1;">
+                            <button type="button" class="honor-file-input-button" id="honor-font-file-btn">
+                                🔤 选择字体文件
+                            </button>
+                            <input type="file" class="honor-file-input-real" id="honor-font-file-input" accept=".ttf,.otf,.woff,.woff2">
+                        </div>
+                        <input type="file" id="font-file-input" accept=".ttf,.otf,.woff,.woff2" style="display: none;">
+                        <input type="text" id="font-url-input" placeholder="选择字体文件或输入URL" readonly style="display: none;">
+                        <button id="select-font-btn">选择文件</button>
+                        <button id="save-font-btn">保存</button>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">支持TTF、OTF、WOFF、WOFF2格式</p>
+                </div>
+                <div class="form-group">
+                    <label>全局字体大小</label>
+                    <div class="font-size-control">
+                        <input type="range" id="font-size-slider" min="12" max="22" step="1">
+                        <span id="font-size-value">16px</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <!-- 数据管理界面 -->
     <div id="data-view" class="view app-page">
@@ -355,8 +699,31 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
             </div>
             <div class="form-group">
                 <label>导入</label>
-                <button id="import-btn" class="action-button">导入备份文件 (覆盖)</button>
+                <!-- 荣耀手机专用文件上传按钮 -->
+                <div class="honor-file-input-container">
+                    <button type="button" class="honor-file-input-button" id="honor-import-btn">
+                        📁 选择备份文件导入
+                    </button>
+                    <input type="file" class="honor-file-input-real" id="honor-import-file-input" accept=".zip">
+                </div>
+                <button id="import-btn" class="action-button" style="display: none;">导入备份文件 (覆盖)</button>
                 <input type="file" id="import-file-input" accept=".zip" style="display:none;">
+            </div>
+            
+            <!-- 荣耀手机权限提示 -->
+            <div style="margin-top: 20px; padding: 15px; background: rgba(33, 150, 243, 0.1); border-radius: 8px; border-left: 4px solid #2196F3;">
+                <h4 style="margin-top: 0; color: #2196F3;">⚠️ 荣耀手机导入提示</h4>
+                <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 5px;">
+                    如果无法选择备份文件，请确保：
+                </p>
+                <ul style="font-size: 13px; color: var(--text-secondary); padding-left: 20px; margin-bottom: 10px;">
+                    <li>文件保存在手机内部存储（非SD卡）</li>
+                    <li>文件大小不超过100MB</li>
+                    <li>已授予应用存储权限</li>
+                </ul>
+                <button type="button" id="test-import-permission" class="permission-test-btn" style="width: 100%;">
+                    测试备份文件选择
+                </button>
             </div>
         </div>
     </div>
@@ -420,8 +787,11 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
         </div>
         
         <audio id="audio-player" style="display: none;"></audio>
-        <input type="file" id="song-bg-input" accept="image/*" style="display:none;">
-        <input type="file" id="vtt-import-input" accept=".vtt,.srt,.lrc,.txt" style="display:none;">
+        <!-- 荣耀手机专用文件上传 -->
+        <div style="display: none;">
+            <input type="file" id="song-bg-input" accept="image/*">
+            <input type="file" id="vtt-import-input" accept=".vtt,.srt,.lrc,.txt">
+        </div>
     </div>
 
     <!-- Full Page Lyrics Modal -->
@@ -436,154 +806,38 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
 
     <div id="crop-modal-overlay" class="modal-overlay"><div id="crop-modal-content"><div id="cropper-container"><img id="cropper-image"></div><div class="cropper-buttons"><button id="cancel-crop-btn">取消</button><button id="confirm-crop-btn">裁剪</button></div></div></div>
     
-    <!-- 移动端文件上传辅助按钮 -->
-    <div id="mobile-file-helper" class="mobile-file-helper" title="文件上传助手">📁</div>
-    
     <!-- 文件上传状态提示 -->
     <div id="file-upload-status" class="file-upload-status"></div>
 
     <script>
-        // 移动端检测
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        // 检测荣耀手机和Android设备
+        const isHonor = /honor/i.test(navigator.userAgent);
+        const isAndroid = /android/i.test(navigator.userAgent);
+        const isHuawei = /huawei/i.test(navigator.userAgent);
+        const isEMUI = /emui/i.test(navigator.userAgent);
+        
+        // 特别处理荣耀/Huawei设备
+        const isHonorOrHuawei = isHonor || isHuawei || isEMUI;
+        const isAndroidDevice = isAndroid || isHonorOrHuawei;
+        
+        console.log('设备检测:', {
+            userAgent: navigator.userAgent,
+            isHonor: isHonor,
+            isAndroid: isAndroid,
+            isHuawei: isHuawei,
+            isEMUI: isEMUI,
+            isHonorOrHuawei: isHonorOrHuawei,
+            isAndroidDevice: isAndroidDevice
+        });
         
         document.addEventListener('DOMContentLoaded', () => {
-            // 移动端文件上传兼容性修复
-            function fixMobileFileInput() {
-                console.log('初始化移动端文件上传修复...');
-                
-                // 为所有文件输入添加额外的事件监听
-                document.querySelectorAll('input[type="file"]').forEach(input => {
-                    // 移除可能冲突的capture属性（某些浏览器上会导致问题）
-                    input.removeAttribute('capture');
-                    
-                    // 重新设置accept属性（根据input类型）
-                    if (input.id === 'audio-file-input' || input.id === 'edit-audio-file-input') {
-                        input.setAttribute('accept', 'audio/*,.mp3,.wav,.m4a');
-                    } else if (input.id === 'image-file-input' || input.id === 'edit-image-file-input' || 
-                               input.id === 'player-bg-input' || input.id === 'bg-file-input' || 
-                               input.id === 'dp-file-input' || input.id === 'song-bg-input') {
-                        input.setAttribute('accept', 'image/*');
-                    } else if (input.id === 'font-file-input') {
-                        input.setAttribute('accept', '.ttf,.otf,.woff,.woff2');
-                    } else if (input.id === 'vtt-import-input') {
-                        input.setAttribute('accept', '.vtt,.srt,.lrc,.txt');
-                    }
-                    
-                    // 添加点击事件修复
-                    input.addEventListener('click', function(e) {
-                        console.log('文件输入框被点击:', this.id);
-                        // 防止多次触发
-                        e.stopPropagation();
-                        
-                        // 如果是移动端，显示提示
-                        if (isMobile) {
-                            showUploadStatus('请选择文件...');
-                        }
-                    });
-                    
-                    // 添加change事件增强处理
-                    input.addEventListener('change', function(e) {
-                        if (this.files && this.files.length > 0) {
-                            console.log('文件选择成功:', this.files[0].name, '大小:', this.files[0].size);
-                            
-                            // 显示上传成功提示
-                            showUploadStatus(`已选择: ${this.files[0].name}`);
-                            
-                            // 如果是移动端，立即处理文件（防止延迟）
-                            if (isMobile) {
-                                const event = new Event('input', { bubbles: true });
-                                this.dispatchEvent(event);
-                            }
-                        } else {
-                            console.log('文件选择取消');
-                        }
-                    });
-                });
-                
-                // 显示移动端文件上传助手按钮
-                const mobileHelper = document.getElementById('mobile-file-helper');
-                if (isMobile && mobileHelper) {
-                    mobileHelper.classList.add('active');
-                    mobileHelper.addEventListener('click', function() {
-                        // 显示文件上传选项
-                        if (confirm('移动端文件上传助手\n\n1. 确保应用有文件访问权限\n2. 如果无法上传，请尝试：\n   - 使用系统文件管理器\n   - 检查文件大小限制\n   - 重启应用\n\n需要进一步帮助吗？')) {
-                            // 创建一个临时的文件输入框
-                            const tempInput = document.createElement('input');
-                            tempInput.type = 'file';
-                            tempInput.accept = '*/*';
-                            tempInput.style.display = 'none';
-                            document.body.appendChild(tempInput);
-                            
-                            tempInput.addEventListener('change', function(e) {
-                                if (this.files && this.files.length > 0) {
-                                    showUploadStatus(`已选择: ${this.files[0].name}`);
-                                    alert('文件已选择，请使用正常的上传功能继续。');
-                                }
-                                document.body.removeChild(tempInput);
-                            });
-                            
-                            tempInput.click();
-                        }
-                    });
-                }
+            // 显示设备信息
+            if (isHonorOrHuawei) {
+                console.log('检测到荣耀/Huawei设备，启用特殊文件上传处理');
+                showUploadStatus('检测到荣耀/Huawei设备，已启用兼容模式');
             }
             
-            // 显示上传状态
-            function showUploadStatus(message) {
-                const statusEl = document.getElementById('file-upload-status');
-                if (statusEl) {
-                    statusEl.textContent = message;
-                    statusEl.classList.add('active');
-                    setTimeout(() => {
-                        statusEl.classList.remove('active');
-                    }, 3000);
-                }
-            }
-            
-            // 修复文件拖拽功能（移动端需要特殊处理）
-            function fixMobileDragAndDrop() {
-                const draggableElements = [
-                    document.getElementById('album-art'),
-                    document.querySelector('.lyric-bubble'),
-                    document.getElementById('song-title-box')
-                ];
-                
-                draggableElements.forEach(element => {
-                    if (element) {
-                        // 移动端使用触摸事件
-                        element.addEventListener('touchstart', function(e) {
-                            const touch = e.touches[0];
-                            this.dispatchEvent(new MouseEvent('mousedown', {
-                                clientX: touch.clientX,
-                                clientY: touch.clientY,
-                                bubbles: true
-                            }));
-                        }, { passive: false });
-                        
-                        element.addEventListener('touchmove', function(e) {
-                            e.preventDefault();
-                            const touch = e.touches[0];
-                            this.dispatchEvent(new MouseEvent('mousemove', {
-                                clientX: touch.clientX,
-                                clientY: touch.clientY,
-                                bubbles: true
-                            }));
-                        }, { passive: false });
-                        
-                        element.addEventListener('touchend', function(e) {
-                            this.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
-                        }, { passive: false });
-                    }
-                });
-            }
-            
-            // 初始化移动端修复
-            if (isMobile) {
-                console.log('检测到移动端设备，启用兼容性修复');
-                fixMobileFileInput();
-                fixMobileDragAndDrop();
-            }
-
+            // 初始化数据库
             const db = new Dexie('MusicOSDatabase');
             db.version(5).stores({ 
                 songs: '++id, title, folderId', 
@@ -605,6 +859,255 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
             
             // Folder State
             let currentFolderId = null; 
+
+            // 显示上传状态
+            function showUploadStatus(message) {
+                const statusEl = document.getElementById('file-upload-status');
+                if (statusEl) {
+                    statusEl.textContent = message;
+                    statusEl.classList.add('active');
+                    setTimeout(() => {
+                        statusEl.classList.remove('active');
+                    }, 3000);
+                }
+                console.log('上传状态:', message);
+            }
+            
+            // 显示文件大小警告
+            function showFileSizeWarning(elementId, fileSizeMB, maxSizeMB = 50) {
+                const warningEl = document.getElementById(elementId);
+                if (warningEl) {
+                    if (fileSizeMB > maxSizeMB) {
+                        warningEl.textContent = `⚠️ 文件较大 (${fileSizeMB.toFixed(1)}MB)，建议压缩或选择小于${maxSizeMB}MB的文件`;
+                        warningEl.classList.add('active');
+                    } else {
+                        warningEl.classList.remove('active');
+                    }
+                }
+            }
+            
+            // 荣耀手机专用文件上传处理
+            function initHonorFileUpload() {
+                console.log('初始化荣耀手机文件上传处理...');
+                
+                // 绑定荣耀手机专用文件上传按钮
+                const honorButtons = {
+                    // 添加歌曲界面
+                    'honor-image-btn': 'honor-image-file-input',
+                    'honor-audio-btn': 'honor-audio-file-input',
+                    
+                    // 编辑歌曲界面
+                    'honor-edit-image-btn': 'honor-edit-image-file-input',
+                    'honor-edit-audio-btn': 'honor-edit-audio-file-input',
+                    
+                    // 美化界面
+                    'honor-player-bg-btn': 'honor-player-bg-input',
+                    'honor-bg-file-btn': 'honor-bg-file-input',
+                    'honor-dp-file-btn': 'honor-dp-file-input',
+                    'honor-font-file-btn': 'honor-font-file-input',
+                    
+                    // 数据管理界面
+                    'honor-import-btn': 'honor-import-file-input'
+                };
+                
+                // 为每个荣耀按钮绑定点击事件
+                Object.keys(honorButtons).forEach(buttonId => {
+                    const button = document.getElementById(buttonId);
+                    const inputId = honorButtons[buttonId];
+                    const input = document.getElementById(inputId);
+                    
+                    if (button && input) {
+                        button.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('荣耀文件上传按钮被点击:', buttonId);
+                            
+                            // 尝试多种方式触发文件选择
+                            try {
+                                // 方法1: 直接调用click
+                                input.click();
+                                
+                                // 方法2: 如果方法1失败，创建新的input元素
+                                setTimeout(() => {
+                                    if (!input.files || input.files.length === 0) {
+                                        console.log('方法1可能失败，尝试方法2');
+                                        const tempInput = document.createElement('input');
+                                        tempInput.type = 'file';
+                                        tempInput.accept = input.accept;
+                                        tempInput.style.display = 'none';
+                                        document.body.appendChild(tempInput);
+                                        
+                                        tempInput.addEventListener('change', function() {
+                                            // 将文件传递给原始input
+                                            const dataTransfer = new DataTransfer();
+                                            for (let i = 0; i < this.files.length; i++) {
+                                                dataTransfer.items.add(this.files[i]);
+                                            }
+                                            input.files = dataTransfer.files;
+                                            
+                                            // 触发change事件
+                                            const event = new Event('change', { bubbles: true });
+                                            input.dispatchEvent(event);
+                                            
+                                            document.body.removeChild(tempInput);
+                                        });
+                                        
+                                        tempInput.click();
+                                    }
+                                }, 100);
+                                
+                                showUploadStatus('请选择文件...');
+                            } catch (error) {
+                                console.error('文件选择失败:', error);
+                                showUploadStatus('文件选择失败，请检查权限');
+                                
+                                // 显示权限引导
+                                document.getElementById('honor-permission-guide').classList.add('active');
+                            }
+                        });
+                        
+                        // 监听文件选择
+                        input.addEventListener('change', function(e) {
+                            if (this.files && this.files.length > 0) {
+                                const file = this.files[0];
+                                console.log('文件选择成功:', file.name, '大小:', (file.size / 1024 / 1024).toFixed(2) + 'MB');
+                                showUploadStatus(`已选择: ${file.name}`);
+                                
+                                // 根据input类型处理文件
+                                handleHonorFileSelection(inputId, file);
+                            }
+                        });
+                    }
+                });
+                
+                // 测试权限按钮
+                document.getElementById('test-audio-permission')?.addEventListener('click', function() {
+                    testFilePermission('audio');
+                });
+                
+                document.getElementById('test-import-permission')?.addEventListener('click', function() {
+                    testFilePermission('zip');
+                });
+                
+                // 显示权限引导按钮
+                document.getElementById('show-permission-guide')?.addEventListener('click', function() {
+                    document.getElementById('honor-permission-guide').classList.add('active');
+                });
+                
+                // 关闭权限引导
+                document.getElementById('close-permission-guide')?.addEventListener('click', function() {
+                    document.getElementById('honor-permission-guide').classList.remove('active');
+                });
+            }
+            
+            // 处理荣耀手机文件选择
+            function handleHonorFileSelection(inputId, file) {
+                console.log('处理荣耀文件:', inputId, file.name);
+                
+                // 根据inputId映射到原始input
+                const inputMap = {
+                    'honor-image-file-input': 'image-file-input',
+                    'honor-audio-file-input': 'audio-file-input',
+                    'honor-edit-image-file-input': 'edit-image-file-input',
+                    'honor-edit-audio-file-input': 'edit-audio-file-input',
+                    'honor-player-bg-input': 'player-bg-input',
+                    'honor-bg-file-input': 'bg-file-input',
+                    'honor-dp-file-input': 'dp-file-input',
+                    'honor-font-file-input': 'font-file-input',
+                    'honor-import-file-input': 'import-file-input'
+                };
+                
+                const originalInputId = inputMap[inputId];
+                if (originalInputId) {
+                    const originalInput = document.getElementById(originalInputId);
+                    if (originalInput) {
+                        // 创建DataTransfer对象来设置文件
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(file);
+                        originalInput.files = dataTransfer.files;
+                        
+                        // 触发change事件
+                        const event = new Event('change', { bubbles: true });
+                        originalInput.dispatchEvent(event);
+                        
+                        // 特殊处理：音频文件自动填充标题
+                        if (inputId === 'honor-audio-file-input' && file.name) {
+                            const titleInput = document.getElementById('song-title-input');
+                            if (titleInput && (!titleInput.value || titleInput.value === '')) {
+                                const fileName = file.name.replace(/\.[^/.]+$/, "");
+                                titleInput.value = fileName;
+                            }
+                        }
+                        
+                        // 显示文件大小警告
+                        const fileSizeMB = file.size / 1024 / 1024;
+                        if (inputId.includes('audio')) {
+                            showFileSizeWarning('audio-size-warning', fileSizeMB, 100);
+                        } else if (inputId.includes('image')) {
+                            showFileSizeWarning('image-size-warning', fileSizeMB, 20);
+                        }
+                    }
+                }
+            }
+            
+            // 测试文件权限
+            function testFilePermission(type) {
+                const acceptMap = {
+                    'audio': '.mp3,.wav,.m4a,audio/*',
+                    'image': 'image/*',
+                    'zip': '.zip',
+                    'all': '*/*'
+                };
+                
+                const accept = acceptMap[type] || '*/*';
+                const testInput = document.createElement('input');
+                testInput.type = 'file';
+                testInput.accept = accept;
+                testInput.style.display = 'none';
+                
+                document.body.appendChild(testInput);
+                
+                let permissionGranted = false;
+                const timeout = setTimeout(() => {
+                    if (!permissionGranted) {
+                        showUploadStatus('文件选择超时，可能没有权限');
+                        document.getElementById('honor-permission-guide').classList.add('active');
+                    }
+                    document.body.removeChild(testInput);
+                }, 3000);
+                
+                testInput.addEventListener('change', function() {
+                    permissionGranted = true;
+                    clearTimeout(timeout);
+                    
+                    if (this.files && this.files.length > 0) {
+                        showUploadStatus('权限测试成功！可以正常选择文件');
+                    } else {
+                        showUploadStatus('权限测试失败，请检查设置');
+                    }
+                    
+                    setTimeout(() => {
+                        document.body.removeChild(testInput);
+                    }, 100);
+                });
+                
+                try {
+                    testInput.click();
+                    showUploadStatus('正在测试文件权限...');
+                } catch (error) {
+                    console.error('权限测试失败:', error);
+                    showUploadStatus('权限测试失败，请查看设置教程');
+                    document.getElementById('honor-permission-guide').classList.add('active');
+                    document.body.removeChild(testInput);
+                }
+            }
+            
+            // 初始化荣耀手机文件上传（如果是荣耀/Huawei设备）
+            if (isHonorOrHuawei) {
+                setTimeout(() => {
+                    initHonorFileUpload();
+                }, 1000);
+            }
 
             function revokeURLs(key) { if (tempObjectURLs[key]) { tempObjectURLs[key].forEach(url => URL.revokeObjectURL(url)); tempObjectURLs[key] = []; } }
             function navigateTo(viewId) { document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === viewId)); }
@@ -736,8 +1239,27 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
             });
             beautifyView.addEventListener('click', async (e) => {
                 const el = e.target;
-                if (el.classList.contains('select-file-btn')) { document.getElementById(`icon-input-${el.dataset.index}`).click(); }
-                else if (el.id === 'select-font-btn') { document.getElementById('font-file-input').click(); }
+                if (el.classList.contains('select-file-btn')) { 
+                    // 如果是荣耀手机，使用专用按钮
+                    if (isHonorOrHuawei) {
+                        const index = el.dataset.index;
+                        const honorInput = document.getElementById(`honor-icon-input-${index}`);
+                        if (honorInput) {
+                            honorInput.click();
+                        } else {
+                            document.getElementById(`icon-input-${index}`).click();
+                        }
+                    } else {
+                        document.getElementById(`icon-input-${el.dataset.index}`).click(); 
+                    }
+                }
+                else if (el.id === 'select-font-btn') { 
+                    if (isHonorOrHuawei) {
+                        document.getElementById('honor-font-file-btn').click();
+                    } else {
+                        document.getElementById('font-file-input').click(); 
+                    }
+                }
                 else if (el.id === 'save-font-btn') { 
                     const fontFileInput = document.getElementById('font-file-input');
                     const fontUrlInput = document.getElementById('font-url-input');
@@ -962,7 +1484,54 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
             document.querySelectorAll('.import-vtt-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     vttTargetId = e.target.dataset.target;
-                    vttInput.click();
+                    // 如果是荣耀手机，使用特殊方法
+                    if (isHonorOrHuawei) {
+                        const tempInput = document.createElement('input');
+                        tempInput.type = 'file';
+                        tempInput.accept = '.vtt,.srt,.lrc,.txt';
+                        tempInput.style.display = 'none';
+                        
+                        tempInput.addEventListener('change', function() {
+                            if (this.files && this.files.length > 0) {
+                                const file = this.files[0];
+                                const reader = new FileReader();
+                                reader.onload = (ev) => {
+                                    const content = ev.target.result;
+                                    const target = document.getElementById(vttTargetId);
+                                    if (target) {
+                                        const fileName = file.name.toLowerCase();
+                                        let parsedLyrics = content;
+                                        
+                                        if (fileName.endsWith('.srt')) {
+                                            parsedLyrics = convertSrtToVtt(content);
+                                        } else if (fileName.endsWith('.lrc')) {
+                                            parsedLyrics = content;
+                                        } else if (fileName.endsWith('.vtt')) {
+                                            parsedLyrics = content;
+                                        } else {
+                                            if (content.includes('-->') || content.includes('WEBVTT')) {
+                                                parsedLyrics = content;
+                                            } else if (content.includes('\n\n') && content.match(/\d+\s*\n\d{2}:\d{2}:\d{2},\d{3}/)) {
+                                                parsedLyrics = convertSrtToVtt(content);
+                                            } else if (content.includes('[') && content.includes(']')) {
+                                                parsedLyrics = content;
+                                            }
+                                        }
+                                        
+                                        target.value = parsedLyrics;
+                                        showUploadStatus(`已导入歌词文件: ${file.name}`);
+                                    }
+                                };
+                                reader.readAsText(file, 'utf-8');
+                            }
+                            document.body.removeChild(tempInput);
+                        });
+                        
+                        document.body.appendChild(tempInput);
+                        tempInput.click();
+                    } else {
+                        vttInput.click();
+                    }
                 });
             });
 
@@ -1210,23 +1779,28 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                 let audioSource;
                 if (audioSourceType === 'file') {
                     audioSource = document.getElementById('audio-file-input').files[0];
-                    if (!audioSource) { alert('请选择一个音频文件！'); return; }
+                    if (!audioSource) { showUploadStatus('请选择一个音频文件！'); return; }
                 } else {
                     audioSource = document.getElementById('audio-url-input').value.trim();
-                    if (!audioSource) { alert('请输入音频URL！'); return; }
+                    if (!audioSource) { showUploadStatus('请输入音频URL！'); return; }
                 }
-                if (!title) { alert('请填写歌曲标题！'); return; }
+                if (!title) { showUploadStatus('请填写歌曲标题！'); return; }
                 
                 showUploadStatus('正在保存歌曲...');
-                await db.songs.add({ title, lyrics: lyricsText, audioType: audioSourceType, audioSource, imageFile: croppedImageBlob, folderId: folderId });
-                showUploadStatus('保存成功！');
-                croppedImageBlob = null; document.getElementById('add-image-preview').style.display = 'none';
-                document.getElementById('song-title-input').value = ''; document.getElementById('lyric-input').value = '';
-                document.getElementById('audio-file-input').value = ''; document.getElementById('audio-url-input').value = '';
-                document.getElementById('image-file-input').value = '';
-                navigateTo('playlist-view'); 
-                currentFolderId = folderId || 'uncategorized';
-                renderPlaylist();
+                try {
+                    await db.songs.add({ title, lyrics: lyricsText, audioType: audioSourceType, audioSource, imageFile: croppedImageBlob, folderId: folderId });
+                    showUploadStatus('保存成功！');
+                    croppedImageBlob = null; document.getElementById('add-image-preview').style.display = 'none';
+                    document.getElementById('song-title-input').value = ''; document.getElementById('lyric-input').value = '';
+                    document.getElementById('audio-file-input').value = ''; document.getElementById('audio-url-input').value = '';
+                    document.getElementById('image-file-input').value = '';
+                    navigateTo('playlist-view'); 
+                    currentFolderId = folderId || 'uncategorized';
+                    renderPlaylist();
+                } catch (error) {
+                    console.error('保存失败:', error);
+                    showUploadStatus('保存失败: ' + error.message);
+                }
             });
 
             async function openEditView(id) {
@@ -1251,12 +1825,17 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                 if (audioFile) { updates.audioType = 'file'; updates.audioSource = audioFile; }
                 if (croppedImageBlob) updates.imageFile = croppedImageBlob;
                 showUploadStatus('正在更新歌曲...');
-                await db.songs.update(id, updates);
-                showUploadStatus('更新成功！');
-                croppedImageBlob = null; form.reset(); 
-                navigateTo('playlist-view'); 
-                currentFolderId = updates.folderId || 'uncategorized';
-                renderPlaylist();
+                try {
+                    await db.songs.update(id, updates);
+                    showUploadStatus('更新成功！');
+                    croppedImageBlob = null; form.reset(); 
+                    navigateTo('playlist-view'); 
+                    currentFolderId = updates.folderId || 'uncategorized';
+                    renderPlaylist();
+                } catch (error) {
+                    console.error('更新失败:', error);
+                    showUploadStatus('更新失败: ' + error.message);
+                }
             });
 
             async function startPlayback(id) {
@@ -1686,14 +2265,38 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
             });
 
             const importFileInput = document.getElementById('import-file-input');
-            document.getElementById('import-btn').addEventListener('click', () => importFileInput.click());
-            importFileInput.addEventListener('change', async (e) => {
+            const honorImportInput = document.getElementById('honor-import-file-input');
+            
+            // 荣耀手机使用专用导入按钮
+            if (isHonorOrHuawei) {
+                // honorImportInput的change事件已经在initHonorFileUpload中处理
+            } else {
+                document.getElementById('import-btn').addEventListener('click', () => importFileInput.click());
+            }
+            
+            importFileInput.addEventListener('change', handleImportFile);
+            honorImportInput.addEventListener('change', function() {
+                if (this.files && this.files.length > 0) {
+                    const file = this.files[0];
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    importFileInput.files = dataTransfer.files;
+                    
+                    const event = new Event('change', { bubbles: true });
+                    importFileInput.dispatchEvent(event);
+                }
+            });
+            
+            async function handleImportFile(e) {
                 const file = e.target.files[0];
                 const importBtn = document.getElementById('import-btn');
                 if (!file || !confirm('确定导入吗？这将覆盖所有现有数据！')) return;
                 
                 try {
-                    importBtn.textContent = "正在导入..."; importBtn.disabled = true;
+                    if (importBtn) {
+                        importBtn.textContent = "正在导入..."; 
+                        importBtn.disabled = true;
+                    }
                     showUploadStatus('正在导入数据...');
                     const zip = await JSZip.loadAsync(file);
                     const metadataFile = zip.file('metadata.json');
@@ -1727,11 +2330,15 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                         location.reload();
                     }, 2000);
                 } catch (err) {
-                    showUploadStatus('导入失败！' + err);
+                    console.error('导入失败:', err);
+                    showUploadStatus('导入失败！' + err.message);
                 } finally {
-                    importBtn.textContent = "导入备份文件 (覆盖)"; importBtn.disabled = false;
+                    if (importBtn) {
+                        importBtn.textContent = "导入备份文件 (覆盖)"; 
+                        importBtn.disabled = false;
+                    }
                 }
-            });
+            }
             
             function handleImageSelection(file, previewElementId) {
                 if (file.type === 'image/gif') {
@@ -1761,7 +2368,40 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
 
             const setSongBgBtn = document.getElementById('set-song-bg-btn');
             const songBgInput = document.getElementById('song-bg-input');
-            setSongBgBtn.addEventListener('click', () => songBgInput.click());
+            setSongBgBtn.addEventListener('click', () => {
+                // 如果是荣耀手机，使用特殊方法
+                if (isHonorOrHuawei) {
+                    const tempInput = document.createElement('input');
+                    tempInput.type = 'file';
+                    tempInput.accept = 'image/*';
+                    tempInput.style.display = 'none';
+                    
+                    tempInput.addEventListener('change', function() {
+                        if (this.files && this.files.length > 0) {
+                            const file = this.files[0];
+                            const playerView = document.getElementById('player-view');
+                            const currentSongId = parseInt(playerView.dataset.currentSongId); 
+                            if (!currentSongId) return;
+                            
+                            const objectURL = URL.createObjectURL(file);
+                            revokeURLs('player');
+                            tempObjectURLs.player.push(objectURL);
+                            playerView.style.backgroundImage = `url(${objectURL})`;
+                            
+                            db.songs.update(currentSongId, { backgroundFile: file }).then(() => { 
+                                showUploadStatus('单曲背景已保存'); 
+                            });
+                        }
+                        document.body.removeChild(tempInput);
+                    });
+                    
+                    document.body.appendChild(tempInput);
+                    tempInput.click();
+                } else {
+                    songBgInput.click();
+                }
+            });
+            
             songBgInput.addEventListener('change', (e) => {
                 const file = e.target.files[0]; if (!file) return;
                 const playerView = document.getElementById('player-view');
@@ -1774,7 +2414,38 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                 e.target.value = '';
             });
 
-            document.getElementById('display-picture-container').addEventListener('click', () => { const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*'; input.onchange = async e => { if (e.target.files[0]) { await db.settings.put({ key: 'displayPicture', value: e.target.files[0] }); renderUI(); } }; input.click(); });
+            document.getElementById('display-picture-container').addEventListener('click', () => { 
+                // 如果是荣耀手机，使用特殊方法
+                if (isHonorOrHuawei) {
+                    const tempInput = document.createElement('input');
+                    tempInput.type = 'file';
+                    tempInput.accept = 'image/*';
+                    tempInput.style.display = 'none';
+                    
+                    tempInput.addEventListener('change', async function() {
+                        if (this.files && this.files.length > 0) {
+                            await db.settings.put({ key: 'displayPicture', value: this.files[0] });
+                            renderUI();
+                            showUploadStatus('展示图片已更新');
+                        }
+                        document.body.removeChild(tempInput);
+                    });
+                    
+                    document.body.appendChild(tempInput);
+                    tempInput.click();
+                } else {
+                    const input = document.createElement('input'); 
+                    input.type = 'file'; 
+                    input.accept = 'image/*'; 
+                    input.onchange = async e => { 
+                        if (e.target.files[0]) { 
+                            await db.settings.put({ key: 'displayPicture', value: e.target.files[0] }); 
+                            renderUI(); 
+                        } 
+                    }; 
+                    input.click();
+                }
+            });
             
             async function initialize() { 
                 setupNavigation(); 
@@ -1803,12 +2474,16 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                 await renderUI(); 
                 navigateTo('desktop-view'); 
                 
-                // 初始化移动端修复（如果之前没执行）
-                if (isMobile) {
-                    fixMobileFileInput();
-                    fixMobileDragAndDrop();
-                }
+                // 显示欢迎消息
+                setTimeout(() => {
+                    if (isHonorOrHuawei) {
+                        showUploadStatus('欢迎使用！荣耀/Huawei用户请使用专用上传按钮');
+                    } else {
+                        showUploadStatus('欢迎使用♡呦の音乐♡播放器');
+                    }
+                }, 1000);
             }
+            
             initialize();
         });
     </script>
