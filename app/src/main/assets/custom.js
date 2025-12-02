@@ -1,11 +1,14 @@
-window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("script");t.src="https://www.googletagmanager.com/gtag/js?id=G-W5GKHM0893",t.async=!0,document.head.appendChild(t);const n=document.createElement("script");n.textContent="window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-W5GKHM0893');",document.body.appendChild(n)});<meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="apple-touch-icon" href="https://chatbotcos.weixin.qq.com/chatbot/30-openaiassets_0fcbc917653b4f5350f3290e2343fdaf_469401762766962387.jpg">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<!DOCTYPE html>
+window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("script");t.src="https://www.googletagmanager.com/gtag/js?id=G-W5GKHM0893",t.async=!0,document.head.appendChild(t);const n=document.createElement("script");n.textContent="window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config', 'G-W5GKHM0893');",document.body.appendChild(n)});<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <!-- 增强移动端兼容性的viewport设置 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="https://chatbotcos.weixin.qq.com/chatbot/30-openaiassets_0fcbc917653b4f5350f3290e2343fdaf_469401762766962387.jpg">
     <!-- 修改1: 标题改为"♡呦の音乐♡播放器" -->
     <title>♡呦の音乐♡播放器</title>
     <!-- Dexie.js for Database -->
@@ -18,11 +21,13 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
     <style>
         :root { /* Night Mode */ --bg-primary: #121212; --bg-secondary: #191919; --bg-tertiary: #282828; --bg-app: rgba(40, 40, 40, 0.7); --text-primary: #ffffff; --text-secondary: #b3b3b3; --border-color: #444; --global-font: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; --lyric-color: #ffffff; --global-font-size: 16px; }
         body.light-mode { /* Day Mode */ --bg-primary: #f0f2f5; --bg-secondary: #ffffff; --bg-tertiary: #e9e9e9; --bg-app: rgba(255, 255, 255, 0.6); --text-primary: #000000; --text-secondary: #555555; --border-color: #dcdcdc; }
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: var(--global-font); color: var(--text-primary); background-color: var(--bg-primary); transition: background-color 0.3s, color 0.3s; font-size: var(--global-font-size); }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: var(--global-font); color: var(--text-primary); background-color: var(--bg-primary); transition: background-color 0.3s, color 0.3s; font-size: var(--global-font-size); -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
         .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; box-sizing: border-box; transition: opacity 0.4s ease, transform 0.4s ease; opacity: 0; transform: scale(1.05); pointer-events: none; background-color: var(--bg-primary); }
         .view.active { opacity: 1; transform: scale(1); pointer-events: auto; }
-        button, input[type="file"], select { cursor: pointer; }
+        button, input[type="file"], select { cursor: pointer; -webkit-appearance: none; appearance: none; }
         button:disabled { cursor: not-allowed; opacity: 0.7; }
+        input[type="file"] { font-size: 14px; }
+        input[type="file"]::-webkit-file-upload-button { background: #1DB954; color: white; border: none; padding: 8px 12px; border-radius: 4px; }
         #desktop-view { background-size: cover; background-position: center; display: flex; flex-direction: column; padding: 20px; }
         .desktop-header { text-align: center; text-shadow: 0 0 10px rgba(0,0,0,0.7); }
         .desktop-time { font-size: 72px; font-weight: 600; }
@@ -39,8 +44,9 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
         .app-page { background-color: var(--bg-secondary); display: flex; flex-direction: column; }
         .app-header { padding: 15px; background-color: var(--bg-tertiary); display: flex; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); z-index: 10;}
         .app-header .back-btn, .app-header h1 { color: var(--text-primary); } .app-header .back-btn { font-size: 24px; background: none; border: none; margin-right: 15px; } .app-header h1 { font-size: calc(var(--global-font-size) + 4px); margin: 0; }
-        .app-content { padding: 20px; overflow-y: auto; flex-grow: 1; }
-        .form-group { margin-bottom: 20px; } .form-group label { display: block; margin-bottom: 8px; color: var(--text-secondary); } .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; background-color: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px; box-sizing: border-box; font-size: inherit; }
+        .app-content { padding: 20px; overflow-y: auto; flex-grow: 1; -webkit-overflow-scrolling: touch; }
+        .form-group { margin-bottom: 20px; } .form-group label { display: block; margin-bottom: 8px; color: var(--text-secondary); } .form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px; background-color: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 4px; box-sizing: border-box; font-size: inherit; -webkit-appearance: none; appearance: none; }
+        .form-group textarea { resize: vertical; min-height: 100px; }
         .action-button { width: 100%; padding: 15px; background-color: #1DB954; color: white; border: none; border-radius: 8px; font-weight: bold; margin-top: 10px; font-size: var(--global-font-size); }
         
         /* Playlist & Folder Styles */
@@ -202,6 +208,47 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
         
         /* 修改2: 新建选项样式 */
         .new-folder-option { color: inherit !important; font-weight: normal !important; }
+        
+        /* 移动端文件上传修复按钮样式 */
+        .mobile-file-helper {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: #1DB954;
+            color: white;
+            border-radius: 50%;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            z-index: 1000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+        
+        .mobile-file-helper.active {
+            display: flex;
+        }
+        
+        /* 文件上传状态提示 */
+        .file-upload-status {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            z-index: 1001;
+            display: none;
+        }
+        
+        .file-upload-status.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -231,7 +278,7 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
             <div class="form-group">
                 <label>封面图片 (可选)</label>
                 <div style="display:flex;align-items:center">
-                    <input type="file" id="image-file-input" accept="image/*" style="flex-grow:1">
+                    <input type="file" id="image-file-input" accept="image/*" style="flex-grow:1" capture="environment">
                     <img id="add-image-preview" class="image-preview" style="display:none">
                 </div>
             </div>
@@ -244,7 +291,7 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                 </div>
                 <p style="font-size: 12px; color: var(--text-secondary); margin-top: 5px; margin-bottom: 10px;">如果机型不支持wav，可上传url</p>
                 <div id="audio-file-group">
-                    <input type="file" id="audio-file-input" accept=".mp3,.wav,.m4a,audio/*">
+                    <input type="file" id="audio-file-input" accept=".mp3,.wav,.m4a,audio/*" capture>
                 </div>
                 <div id="audio-url-group" class="hidden-input">
                     <input type="text" id="audio-url-input" placeholder="输入 .mp3 或 .wav 链接">
@@ -388,9 +435,155 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
     </div>
 
     <div id="crop-modal-overlay" class="modal-overlay"><div id="crop-modal-content"><div id="cropper-container"><img id="cropper-image"></div><div class="cropper-buttons"><button id="cancel-crop-btn">取消</button><button id="confirm-crop-btn">裁剪</button></div></div></div>
+    
+    <!-- 移动端文件上传辅助按钮 -->
+    <div id="mobile-file-helper" class="mobile-file-helper" title="文件上传助手">📁</div>
+    
+    <!-- 文件上传状态提示 -->
+    <div id="file-upload-status" class="file-upload-status"></div>
 
     <script>
+        // 移动端检测
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
         document.addEventListener('DOMContentLoaded', () => {
+            // 移动端文件上传兼容性修复
+            function fixMobileFileInput() {
+                console.log('初始化移动端文件上传修复...');
+                
+                // 为所有文件输入添加额外的事件监听
+                document.querySelectorAll('input[type="file"]').forEach(input => {
+                    // 移除可能冲突的capture属性（某些浏览器上会导致问题）
+                    input.removeAttribute('capture');
+                    
+                    // 重新设置accept属性（根据input类型）
+                    if (input.id === 'audio-file-input' || input.id === 'edit-audio-file-input') {
+                        input.setAttribute('accept', 'audio/*,.mp3,.wav,.m4a');
+                    } else if (input.id === 'image-file-input' || input.id === 'edit-image-file-input' || 
+                               input.id === 'player-bg-input' || input.id === 'bg-file-input' || 
+                               input.id === 'dp-file-input' || input.id === 'song-bg-input') {
+                        input.setAttribute('accept', 'image/*');
+                    } else if (input.id === 'font-file-input') {
+                        input.setAttribute('accept', '.ttf,.otf,.woff,.woff2');
+                    } else if (input.id === 'vtt-import-input') {
+                        input.setAttribute('accept', '.vtt,.srt,.lrc,.txt');
+                    }
+                    
+                    // 添加点击事件修复
+                    input.addEventListener('click', function(e) {
+                        console.log('文件输入框被点击:', this.id);
+                        // 防止多次触发
+                        e.stopPropagation();
+                        
+                        // 如果是移动端，显示提示
+                        if (isMobile) {
+                            showUploadStatus('请选择文件...');
+                        }
+                    });
+                    
+                    // 添加change事件增强处理
+                    input.addEventListener('change', function(e) {
+                        if (this.files && this.files.length > 0) {
+                            console.log('文件选择成功:', this.files[0].name, '大小:', this.files[0].size);
+                            
+                            // 显示上传成功提示
+                            showUploadStatus(`已选择: ${this.files[0].name}`);
+                            
+                            // 如果是移动端，立即处理文件（防止延迟）
+                            if (isMobile) {
+                                const event = new Event('input', { bubbles: true });
+                                this.dispatchEvent(event);
+                            }
+                        } else {
+                            console.log('文件选择取消');
+                        }
+                    });
+                });
+                
+                // 显示移动端文件上传助手按钮
+                const mobileHelper = document.getElementById('mobile-file-helper');
+                if (isMobile && mobileHelper) {
+                    mobileHelper.classList.add('active');
+                    mobileHelper.addEventListener('click', function() {
+                        // 显示文件上传选项
+                        if (confirm('移动端文件上传助手\n\n1. 确保应用有文件访问权限\n2. 如果无法上传，请尝试：\n   - 使用系统文件管理器\n   - 检查文件大小限制\n   - 重启应用\n\n需要进一步帮助吗？')) {
+                            // 创建一个临时的文件输入框
+                            const tempInput = document.createElement('input');
+                            tempInput.type = 'file';
+                            tempInput.accept = '*/*';
+                            tempInput.style.display = 'none';
+                            document.body.appendChild(tempInput);
+                            
+                            tempInput.addEventListener('change', function(e) {
+                                if (this.files && this.files.length > 0) {
+                                    showUploadStatus(`已选择: ${this.files[0].name}`);
+                                    alert('文件已选择，请使用正常的上传功能继续。');
+                                }
+                                document.body.removeChild(tempInput);
+                            });
+                            
+                            tempInput.click();
+                        }
+                    });
+                }
+            }
+            
+            // 显示上传状态
+            function showUploadStatus(message) {
+                const statusEl = document.getElementById('file-upload-status');
+                if (statusEl) {
+                    statusEl.textContent = message;
+                    statusEl.classList.add('active');
+                    setTimeout(() => {
+                        statusEl.classList.remove('active');
+                    }, 3000);
+                }
+            }
+            
+            // 修复文件拖拽功能（移动端需要特殊处理）
+            function fixMobileDragAndDrop() {
+                const draggableElements = [
+                    document.getElementById('album-art'),
+                    document.querySelector('.lyric-bubble'),
+                    document.getElementById('song-title-box')
+                ];
+                
+                draggableElements.forEach(element => {
+                    if (element) {
+                        // 移动端使用触摸事件
+                        element.addEventListener('touchstart', function(e) {
+                            const touch = e.touches[0];
+                            this.dispatchEvent(new MouseEvent('mousedown', {
+                                clientX: touch.clientX,
+                                clientY: touch.clientY,
+                                bubbles: true
+                            }));
+                        }, { passive: false });
+                        
+                        element.addEventListener('touchmove', function(e) {
+                            e.preventDefault();
+                            const touch = e.touches[0];
+                            this.dispatchEvent(new MouseEvent('mousemove', {
+                                clientX: touch.clientX,
+                                clientY: touch.clientY,
+                                bubbles: true
+                            }));
+                        }, { passive: false });
+                        
+                        element.addEventListener('touchend', function(e) {
+                            this.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+                        }, { passive: false });
+                    }
+                });
+            }
+            
+            // 初始化移动端修复
+            if (isMobile) {
+                console.log('检测到移动端设备，启用兼容性修复');
+                fixMobileFileInput();
+                fixMobileDragAndDrop();
+            }
+
             const db = new Dexie('MusicOSDatabase');
             db.version(5).stores({ 
                 songs: '++id, title, folderId', 
@@ -555,16 +748,16 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                         await db.settings.put({ key: 'fontUrl', value: fontUrl });
                         fontUrlInput.value = '已上传字体文件';
                         await renderUI();
-                        alert('字体文件已保存！');
+                        showUploadStatus('字体文件已保存！');
                     } else if (fontUrlInput.value && fontUrlInput.value !== '已上传字体文件') {
                         await db.settings.put({ key: 'fontUrl', value: fontUrlInput.value });
                         await renderUI();
-                        alert('字体URL已保存！');
+                        showUploadStatus('字体URL已保存！');
                     } else {
-                        alert('请先选择字体文件或输入字体URL！');
+                        showUploadStatus('请先选择字体文件或输入字体URL！');
                     }
                 }
-                else if (el.id === 'save-cover-size-btn') { const width = document.getElementById('cover-width-input').value, height = document.getElementById('cover-height-input').value; await db.settings.bulkPut([{ key: 'coverWidth', value: width }, { key: 'coverHeight', value: height }]); alert('封面尺寸已保存！'); }
+                else if (el.id === 'save-cover-size-btn') { const width = document.getElementById('cover-width-input').value, height = document.getElementById('cover-height-input').value; await db.settings.bulkPut([{ key: 'coverWidth', value: width }, { key: 'coverHeight', value: height }]); showUploadStatus('封面尺寸已保存！'); }
             });
             beautifyView.addEventListener('input', async (e) => {
                 if (e.target.id === 'font-size-slider') {
@@ -788,7 +981,7 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                         if (fileName.endsWith('.srt')) {
                             parsedLyrics = convertSrtToVtt(content);
                         } else if (fileName.endsWith('.lrc')) {
-                            parsedLyrics = convertLrcToVtt(content);
+                            parsedLyrics = content; // LRC格式保持原样
                         } else if (fileName.endsWith('.vtt')) {
                             parsedLyrics = content;
                         } else {
@@ -797,7 +990,8 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                             } else if (content.includes('\n\n') && content.match(/\d+\s*\n\d{2}:\d{2}:\d{2},\d{3}/)) {
                                 parsedLyrics = convertSrtToVtt(content);
                             } else if (content.includes('[') && content.includes(']')) {
-                                parsedLyrics = convertLrcToVtt(content);
+                                // LRC格式保持原样
+                                parsedLyrics = content;
                             }
                         }
                         
@@ -817,39 +1011,183 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                 return vttContent;
             }
             
-            function convertLrcToVtt(lrcContent) {
+            // 修改1: 增强LRC解析函数
+            function parseLrcToLyrics(lrcContent) {
                 const lines = lrcContent.split('\n');
-                let vttContent = 'WEBVTT\n\n';
-                let prevTime = '00:00:00.000';
+                const lyrics = [];
+                
+                // 首先收集所有时间标签和歌词
+                const rawLyrics = [];
                 
                 for (let i = 0; i < lines.length; i++) {
                     const line = lines[i].trim();
                     if (!line) continue;
                     
-                    const match = line.match(/\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\](.*)/);
-                    if (match) {
-                        const minutes = match[1];
-                        const seconds = match[2];
-                        const milliseconds = match[3] ? match[3].padEnd(3, '0') : '000';
-                        const text = match[4].trim();
+                    // 匹配LRC时间标签: [mm:ss.xx] 或 [mm:ss]
+                    const timeMatch = line.match(/\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\](.*)/);
+                    if (timeMatch) {
+                        const minutes = timeMatch[1];
+                        const seconds = timeMatch[2];
+                        const milliseconds = timeMatch[3] ? timeMatch[3].padEnd(3, '0') : '000';
+                        const text = timeMatch[4].trim();
                         
                         if (text) {
-                            const startTime = `00:${minutes}:${seconds}.${milliseconds}`;
-                            const endMs = parseInt(minutes) * 60 * 1000 + 
-                                         parseInt(seconds) * 1000 + 
-                                         parseInt(milliseconds) + 3000;
-                            const endMinutes = Math.floor(endMs / 60000);
-                            const endSeconds = Math.floor((endMs % 60000) / 1000);
-                            const endMilliseconds = endMs % 1000;
-                            const endTime = `00:${endMinutes.toString().padStart(2, '0')}:${endSeconds.toString().padStart(2, '0')}.${endMilliseconds.toString().padStart(3, '0')}`;
-                            
-                            vttContent += `${startTime} --> ${endTime}\n${text}\n\n`;
-                            prevTime = endTime;
+                            const startTime = parseFloat(minutes) * 60 + parseFloat(seconds) + parseFloat(milliseconds) / 1000;
+                            rawLyrics.push({ startTime, text });
                         }
                     }
                 }
                 
-                return vttContent;
+                // 按时间排序
+                rawLyrics.sort((a, b) => a.startTime - b.startTime);
+                
+                // 为每句歌词计算结束时间（下一句的开始时间）
+                for (let i = 0; i < rawLyrics.length; i++) {
+                    const current = rawLyrics[i];
+                    const next = rawLyrics[i + 1];
+                    
+                    lyrics.push({
+                        startTime: current.startTime,
+                        endTime: next ? next.startTime : current.startTime + 5, // 最后一句默认显示5秒
+                        text: current.text
+                    });
+                }
+                
+                return lyrics;
+            }
+            
+            // 修改1: 增强parseLyrics函数以支持LRC格式
+            function parseLyrics(lyricText) { 
+                currentLyrics = []; 
+                
+                // 检查是否是VTT格式
+                if (lyricText.includes('WEBVTT') || lyricText.includes('-->')) {
+                    const lines = lyricText.split('\n');
+                    const regex = /(\d{2}:\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}\.\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}\.\d{3})/;
+                    
+                    for (let i = 0; i < lines.length; i++) {
+                        const match = lines[i].trim().match(regex);
+                        if (match && i + 1 < lines.length) {
+                            const textLine = lines[i + 1].trim();
+                            if (textLine && !textLine.includes('-->')) {
+                                currentLyrics.push({ 
+                                    startTime: parseTime(match[1]), 
+                                    endTime: parseTime(match[2]), 
+                                    text: textLine 
+                                });
+                                i++;
+                            }
+                        }
+                    }
+                } 
+                // 检查是否是LRC格式（包含时间标签 [mm:ss.xx]）
+                else if (lyricText.includes('[') && lyricText.match(/\[\d{2}:\d{2}(?:\.\d{2,3})?\]/)) {
+                    currentLyrics = parseLrcToLyrics(lyricText);
+                }
+                else {
+                    // 尝试其他格式
+                    const lines = lyricText.split('\n');
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        if (trimmed) {
+                            const srtMatch = trimmed.match(/(\d{2}:\d{2}:\d{2},\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2},\d{3})/);
+                            if (srtMatch) {
+                                continue;
+                            }
+                            
+                            if (!trimmed.match(/\d+\s*$/) && !trimmed.match(/^(\d{2}:\d{2}:\d{2}|WEBVTT)/)) {
+                                currentLyrics.push({ 
+                                    startTime: currentLyrics.length * 3,
+                                    endTime: (currentLyrics.length + 1) * 3,
+                                    text: trimmed 
+                                });
+                            }
+                        }
+                    }
+                }
+                
+                // 如果没有解析到歌词，添加一个默认项
+                if (currentLyrics.length === 0 && lyricText.trim()) {
+                    currentLyrics.push({ 
+                        startTime: 0, 
+                        endTime: 60, 
+                        text: lyricText.split('\n')[0].trim() || '...' 
+                    });
+                }
+                
+                // 修改1: 确保歌词按时间排序
+                currentLyrics.sort((a, b) => a.startTime - b.startTime);
+                
+                console.log('解析后的歌词:', currentLyrics);
+            }
+            
+            function parseTime(t) { 
+                const parts = t.split(':');
+                if (parts.length === 3) {
+                    return (parseInt(parts[0], 10) * 3600) + (parseInt(parts[1], 10) * 60) + parseFloat(parts[2]);
+                } else if (parts.length === 2) {
+                    return (parseInt(parts[0], 10) * 60) + parseFloat(parts[1]);
+                }
+                return 0;
+            }
+            
+            function renderFullLyrics() {
+                const list = document.getElementById('full-lyrics-list');
+                list.innerHTML = '';
+                currentLyrics.forEach((line, index) => {
+                    const p = document.createElement('p');
+                    p.className = 'full-lyric-line';
+                    p.textContent = line.text;
+                    p.dataset.startTime = line.startTime;
+                    p.dataset.index = index;
+                    p.onclick = () => { document.getElementById('audio-player').currentTime = line.startTime; };
+                    list.appendChild(p);
+                });
+            }
+
+            // 修改1: 增强歌词显示逻辑，支持LRC格式的"保持显示上一句"功能
+            function updatePlayerState() {
+                const audio = document.getElementById('audio-player');
+                const currentTime = audio.currentTime;
+                
+                // 修改1: 查找当前应该显示的歌词
+                let activeIndex = -1;
+                
+                // 遍历歌词，找到最后一个开始时间小于等于当前时间的歌词
+                for (let i = 0; i < currentLyrics.length; i++) {
+                    if (currentTime >= currentLyrics[i].startTime) {
+                        // 如果这是最后一句，或者当前时间小于下一句的开始时间
+                        if (i === currentLyrics.length - 1 || currentTime < currentLyrics[i + 1].startTime) {
+                            activeIndex = i;
+                        }
+                    }
+                }
+                
+                // 更新歌词气泡
+                const bubbleEl = document.getElementById('lyric-display');
+                if (activeIndex !== -1) {
+                    bubbleEl.textContent = currentLyrics[activeIndex].text;
+                } else {
+                    bubbleEl.textContent = '...';
+                }
+
+                // 更新全屏歌词列表
+                const listLines = document.querySelectorAll('.full-lyric-line');
+                listLines.forEach(l => l.classList.remove('active'));
+                if (activeIndex !== -1) {
+                    const activeLine = listLines[activeIndex];
+                    if (activeLine) {
+                        activeLine.classList.add('active');
+                        activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+
+                const now = Date.now();
+                if (now - lastSaveTime > 3000) {
+                    const currentSongId = parseInt(document.getElementById('player-view').dataset.currentSongId);
+                    if (currentSongId && !audio.paused) { db.settings.put({ key: 'lastPlaybackState', value: { songId: currentSongId, currentTime: audio.currentTime } }); }
+                    lastSaveTime = now;
+                }
             }
 
             document.getElementById('audio-file-input').addEventListener('change', function(e) {
@@ -878,8 +1216,10 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                     if (!audioSource) { alert('请输入音频URL！'); return; }
                 }
                 if (!title) { alert('请填写歌曲标题！'); return; }
+                
+                showUploadStatus('正在保存歌曲...');
                 await db.songs.add({ title, lyrics: lyricsText, audioType: audioSourceType, audioSource, imageFile: croppedImageBlob, folderId: folderId });
-                alert('保存成功！');
+                showUploadStatus('保存成功！');
                 croppedImageBlob = null; document.getElementById('add-image-preview').style.display = 'none';
                 document.getElementById('song-title-input').value = ''; document.getElementById('lyric-input').value = '';
                 document.getElementById('audio-file-input').value = ''; document.getElementById('audio-url-input').value = '';
@@ -910,8 +1250,9 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                 const audioFile = document.getElementById('edit-audio-file-input').files[0];
                 if (audioFile) { updates.audioType = 'file'; updates.audioSource = audioFile; }
                 if (croppedImageBlob) updates.imageFile = croppedImageBlob;
+                showUploadStatus('正在更新歌曲...');
                 await db.songs.update(id, updates);
-                alert('更新成功！');
+                showUploadStatus('更新成功！');
                 croppedImageBlob = null; form.reset(); 
                 navigateTo('playlist-view'); 
                 currentFolderId = updates.folderId || 'uncategorized';
@@ -1011,112 +1352,7 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                 renderFullLyrics();
                 navigateTo('player-view');
             }
-
-            function parseTime(t) { 
-                const parts = t.split(':');
-                if (parts.length === 3) {
-                    return (parseInt(parts[0], 10) * 3600) + (parseInt(parts[1], 10) * 60) + parseFloat(parts[2]);
-                } else if (parts.length === 2) {
-                    return (parseInt(parts[0], 10) * 60) + parseFloat(parts[1]);
-                }
-                return 0;
-            }
             
-            function parseLyrics(lyricText) { 
-                currentLyrics = []; 
-                
-                if (lyricText.includes('WEBVTT') || lyricText.includes('-->')) {
-                    const lines = lyricText.split('\n');
-                    const regex = /(\d{2}:\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}\.\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}\.\d{3}|\d{2}:\d{2}\.\d{3})/;
-                    
-                    for (let i = 0; i < lines.length; i++) {
-                        const match = lines[i].trim().match(regex);
-                        if (match && i + 1 < lines.length) {
-                            const textLine = lines[i + 1].trim();
-                            if (textLine && !textLine.includes('-->')) {
-                                currentLyrics.push({ 
-                                    startTime: parseTime(match[1]), 
-                                    endTime: parseTime(match[2]), 
-                                    text: textLine 
-                                });
-                                i++;
-                            }
-                        }
-                    }
-                } else {
-                    const lines = lyricText.split('\n');
-                    for (const line of lines) {
-                        const trimmed = line.trim();
-                        if (trimmed) {
-                            const srtMatch = trimmed.match(/(\d{2}:\d{2}:\d{2},\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2},\d{3})/);
-                            if (srtMatch) {
-                                continue;
-                            }
-                            
-                            if (!trimmed.match(/\d+\s*$/) && !trimmed.match(/^(\d{2}:\d{2}:\d{2}|WEBVTT)/)) {
-                                currentLyrics.push({ 
-                                    startTime: currentLyrics.length * 3,
-                                    endTime: (currentLyrics.length + 1) * 3,
-                                    text: trimmed 
-                                });
-                            }
-                        }
-                    }
-                }
-                
-                if (currentLyrics.length === 0 && lyricText.trim()) {
-                    currentLyrics.push({ 
-                        startTime: 0, 
-                        endTime: 60, 
-                        text: lyricText.split('\n')[0].trim() || '...' 
-                    });
-                }
-            }
-            
-            function renderFullLyrics() {
-                const list = document.getElementById('full-lyrics-list');
-                list.innerHTML = '';
-                currentLyrics.forEach((line, index) => {
-                    const p = document.createElement('p');
-                    p.className = 'full-lyric-line';
-                    p.textContent = line.text;
-                    p.dataset.startTime = line.startTime;
-                    p.dataset.index = index;
-                    p.onclick = () => { document.getElementById('audio-player').currentTime = line.startTime; };
-                    list.appendChild(p);
-                });
-            }
-
-            function updatePlayerState() {
-                const audio = document.getElementById('audio-player');
-                const currentTime = audio.currentTime;
-                
-                const activeIndex = currentLyrics.findIndex(l => currentTime >= l.startTime && currentTime < l.endTime);
-                
-                const bubbleEl = document.getElementById('lyric-display');
-                if (activeIndex !== -1) {
-                    bubbleEl.textContent = currentLyrics[activeIndex].text;
-                } else {
-                    bubbleEl.textContent = '...';
-                }
-
-                const listLines = document.querySelectorAll('.full-lyric-line');
-                listLines.forEach(l => l.classList.remove('active'));
-                if (activeIndex !== -1) {
-                    const activeLine = listLines[activeIndex];
-                    if (activeLine) {
-                        activeLine.classList.add('active');
-                        activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                }
-
-                const now = Date.now();
-                if (now - lastSaveTime > 3000) {
-                    const currentSongId = parseInt(document.getElementById('player-view').dataset.currentSongId);
-                    if (currentSongId && !audio.paused) { db.settings.put({ key: 'lastPlaybackState', value: { songId: currentSongId, currentTime: audio.currentTime } }); }
-                    lastSaveTime = now;
-                }
-            }
             const audioPlayer = document.getElementById('audio-player');
             audioPlayer.addEventListener('timeupdate', () => {
                 updatePlayerState();
@@ -1252,7 +1488,7 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                     if (currentSongId) {
                         await db.songs.update(currentSongId, { backgroundFile: null });
                         playerView.style.backgroundImage = '';
-                        alert('背景已重置');
+                        showUploadStatus('背景已重置');
                     }
                 });
                 
@@ -1261,7 +1497,7 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                     resetBtn.addEventListener('click', async () => {
                         if(confirm('确定要重置播放界面的所有元素（封面、歌词、歌名）位置吗？')) {
                             await db.settings.delete('playerLayout');
-                            alert('位置已重置，下次播放时生效。');
+                            showUploadStatus('位置已重置，下次播放时生效。');
                         }
                     });
                 }
@@ -1398,6 +1634,7 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                 const exportBtn = document.getElementById('export-btn');
                 try {
                     exportBtn.textContent = '正在打包...'; exportBtn.disabled = true;
+                    showUploadStatus('正在导出数据...');
                     const zip = new JSZip();
                     const songs = await db.songs.toArray();
                     const settings = await db.settings.toArray();
@@ -1440,8 +1677,9 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                     a.download = `music-os-backup-${new Date().toISOString().slice(0, 10)}.zip`;
                     a.click();
                     URL.revokeObjectURL(url);
+                    showUploadStatus('导出成功！');
                 } catch (e) {
-                    alert('导出失败: ' + e);
+                    showUploadStatus('导出失败: ' + e);
                 } finally {
                     exportBtn.textContent = '导出全部数据'; exportBtn.disabled = false;
                 }
@@ -1456,6 +1694,7 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                 
                 try {
                     importBtn.textContent = "正在导入..."; importBtn.disabled = true;
+                    showUploadStatus('正在导入数据...');
                     const zip = await JSZip.loadAsync(file);
                     const metadataFile = zip.file('metadata.json');
                     if (!metadataFile) throw new Error('备份文件格式不正确 (缺少 metadata.json)');
@@ -1483,10 +1722,12 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                         if(metadata.folders) await db.folders.bulkPut(metadata.folders);
                     });
 
-                    alert('导入成功！应用将重新加载。');
-                    location.reload();
+                    showUploadStatus('导入成功！应用将重新加载。');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 2000);
                 } catch (err) {
-                    alert('导入失败！' + err);
+                    showUploadStatus('导入失败！' + err);
                 } finally {
                     importBtn.textContent = "导入备份文件 (覆盖)"; importBtn.disabled = false;
                 }
@@ -1529,7 +1770,7 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                 revokeURLs('player');
                 tempObjectURLs.player.push(objectURL);
                 playerView.style.backgroundImage = `url(${objectURL})`;
-                db.songs.update(currentSongId, { backgroundFile: file }).then(() => { console.log('单曲背景已保存'); });
+                db.songs.update(currentSongId, { backgroundFile: file }).then(() => { showUploadStatus('单曲背景已保存'); });
                 e.target.value = '';
             });
 
@@ -1561,6 +1802,12 @@ window.addEventListener("DOMContentLoaded",()=>{const t=document.createElement("
                 if (!settingsExist) { await db.settings.put({ key: 'appConfig', value: defaultAppConfig }); } 
                 await renderUI(); 
                 navigateTo('desktop-view'); 
+                
+                // 初始化移动端修复（如果之前没执行）
+                if (isMobile) {
+                    fixMobileFileInput();
+                    fixMobileDragAndDrop();
+                }
             }
             initialize();
         });
